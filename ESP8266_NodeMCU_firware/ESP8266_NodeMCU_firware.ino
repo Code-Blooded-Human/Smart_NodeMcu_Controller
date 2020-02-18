@@ -4,7 +4,11 @@
  * VERSION: 1.0.0
  * COMMUNICATION_PROTOCOL:1
  * FEATURES IMPLEMENTED
- * [O] Read and Write configuration from eeprom
+ * [I] Read and Write configuration from eeprom
+ * 
+ * TODO
+ * [T] Implement request parser 
+ * 
  * 
  * FEATURES TO BE IMPLEMENTED
  * [X] SSL Server.
@@ -13,7 +17,8 @@
  * 
  * FEATURES THAT MAY BE IMPLEMENTED
  * 
- * 
+ * BUGS
+ * [?]Cannot setup softAP from config file
  * 
  * 
  * 
@@ -28,6 +33,10 @@
 
 #define ON 1
 #define OFF 0
+ESP8266WebServer server ( 80 );
+boolean is_server=false;
+
+
 
 struct Configuration{
   int version;
@@ -127,7 +136,10 @@ int write_config_eeprom(Configuration config){
   for(int addr=100,i=0;addr<200;i++,addr++){
     EEPROM.write(addr,config.server_url[i]);
     if(char(config.server_url[i])=='\0'){
-      break;
+      break;curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"username":"xyz","password":"xyz"}' \
+  http://localhost:3000/api/login
     }
   }
 
@@ -160,8 +172,13 @@ int configure_wifi(Configuration config){
       delay(250);
     }
     Serial.println("Connected to wifi");  
+    Serial.println(WiFi.localIP());
+    Serial.println(WiFi.macAddress());
+    
   }
-  
+  server.begin();
+  is_server=true;
+  server.on ( "/", handle_request );
 }
 
 int configure_pin_mode(Configuration config){
@@ -215,6 +232,19 @@ void setup() {
 }
 
 void loop() {
-  
+  if(is_server == true){
+    server.handleClient();
+  }
+}
+
+
+void handle_request(){
+  if (server.hasArg("plain")== true){ //Check if body received
+    Serial.println("Recivied an request");
+    Serial.println(server.arg("plain"));
+  }else{ //malformed request
+    Serial.println("Recivied an malformed-request");
+    server.send(400,"Bad Request, Send data according to protocol");
+  }
 
 }
