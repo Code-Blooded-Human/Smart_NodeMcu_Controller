@@ -7,7 +7,7 @@
  * [O] Read and Write configuration from eeprom
  * 
  * FEATURES TO BE IMPLEMENTED
- * 
+ * [X] SSL Server.
  * 
  * 
  * 
@@ -136,11 +136,52 @@ int write_config_eeprom(Configuration config){
 }
 
 int configure_wifi(Configuration config){
+  if(config.version==0){                                            //Start only AP Mode
+    String mac_id = WiFi.macAddress();
+    char AP_SSID[21];
+    AP_SSID[0]=mac_id[0];
+    AP_SSID[1]=mac_id[1];
+    AP_SSID[2]=mac_id[3];
+    AP_SSID[3]=mac_id[4];
+    AP_SSID[4]=mac_id[6];
+    AP_SSID[5]=mac_id[7];
+    AP_SSID[6]=mac_id[9];
+    AP_SSID[7]=mac_id[10];
+    AP_SSID[8]='\0';
+    Serial.println(AP_SSID);
+    WiFi.softAP(AP_SSID,"password1234",false,4); // TODO: MAKE THIS GLOBAL CONFIGURATION.
+  }else{ 
+    WiFi.softAP(config.AP_SSID,config.AP_password,false,4); // TODO: MAKE THIS GLOBAL CONFIGURATION.
+    WiFi.begin(config.router_SSID,config.router_password);
+    Serial.println(config.router_SSID);
+    while(WiFi.status() != WL_CONNECTED){
+      
+      Serial.print("[X]");
+      delay(250);
+    }
+    Serial.println("Connected to wifi");  
+  }
   
 }
 
 int configure_pin_mode(Configuration config){
-
+  if(config.version==0){
+    //Nothing to do
+    return -1;
+  }
+  int pin_mapping[9]={16,5,4,0,2,14,12,13,15};//TODO: MAKE THIS GLOBAL CONFIGURATION
+  for(int i=1;i<9;i++){
+    switch(config.IO_config[i-1]){
+      case 1: //INPUT MODE
+        pinMode(pin_mapping[i],INPUT);
+        break;
+      case 2:
+        pinMode(pin_mapping[i],OUTPUT);
+        digitalWrite(pin_mapping[i],LOW);
+        break;
+     
+    }
+  }
 }
 
 int configure(){
@@ -159,7 +200,7 @@ void test_write_config_eeprom(){ /*tests if write_config_eeprom writes to the ee
     config.IO_config[i]=i*i; 
   }
   strcpy(config.router_SSID,"IITBhilai\0");
-  strcpy(config.router_password,"IITBhilaipass\0");
+  strcpy(config.router_password,"\0");
   strcpy(config.AP_SSID,"APSSID\0");
   strcpy(config.AP_password,"pass\0");
   strcpy(config.server_url,"AAAAAAAAAAAAAAAAAAAA\0");
@@ -169,7 +210,8 @@ void test_write_config_eeprom(){ /*tests if write_config_eeprom writes to the ee
 
 void setup() {
   Serial.begin(9600);
-  
+  test_write_config_eeprom();
+  configure();
 }
 
 void loop() {
