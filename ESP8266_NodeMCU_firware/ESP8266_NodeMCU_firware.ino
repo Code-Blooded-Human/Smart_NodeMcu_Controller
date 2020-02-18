@@ -4,7 +4,7 @@
  * VERSION: 1.0.0
  * COMMUNICATION_PROTOCOL:1
  * FEATURES IMPLEMENTED
- * 
+ * [O] Read and Write configuration from eeprom
  * 
  * FEATURES TO BE IMPLEMENTED
  * 
