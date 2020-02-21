@@ -136,10 +136,7 @@ int write_config_eeprom(Configuration config){
   for(int addr=100,i=0;addr<200;i++,addr++){
     EEPROM.write(addr,config.server_url[i]);
     if(char(config.server_url[i])=='\0'){
-      break;curl --header "Content-Type: application/json" \
-  --request POST \
-  --data '{"username":"xyz","password":"xyz"}' \
-  http://localhost:3000/api/login
+      break;
     }
   }
 
